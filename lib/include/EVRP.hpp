@@ -4,6 +4,8 @@
 #include <vector>
 #include <limits.h>
 #include <string>
+#include <iomanip>
+
 #define CHAR_LEN 100
 #define MAX_NODE 1500
 #define MAX_NUM_FINDING_SAFE 10
