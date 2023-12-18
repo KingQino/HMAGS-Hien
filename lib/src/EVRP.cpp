@@ -37,6 +37,9 @@ double current_best;
 solution *best_sol;
 string algorithm;
 
+int MAX_EXEC_TIME; // unit seconds
+
+
 void compute_nearest_points() {
     for(int i = 1; i <= NUM_OF_CUSTOMERS; i++) {
         nearest[i].assign(NUM_OF_CUSTOMERS, 0);
@@ -221,6 +224,14 @@ void read_problem(char* filename){
         exit(1);
   } else {
     compute_distances();
+
+    if (NUM_OF_CUSTOMERS <= 100) {
+        MAX_EXEC_TIME = int (1 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
+    } else if (NUM_OF_CUSTOMERS <= 915) {
+        MAX_EXEC_TIME = int (2 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
+    } else {
+        MAX_EXEC_TIME = int (3 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
+    }
   }
 
 }
@@ -450,28 +461,14 @@ void save_solution(string output_dir, string algorithm, string task, int run){
     string solution_file_name = output_dir + "/solution_" + algorithm + '_' +
        task +".txt";
     solution_file.open(solution_file_name);
-    solution_file << ACTUAL_PROBLEM_SIZE << "\n";
-    
-    for(int i = 0; i < ACTUAL_PROBLEM_SIZE; i++) {
-        if(i == 0) {
-            solution_file << "0 ";
-        } else {
-            if(i < problem_size) {
-                solution_file << "1 ";
-            } else {
-                solution_file << "2 ";
-            }
-        }
 
-        solution_file << node_list[i].x  << " " << node_list[i].y << "\n";
-    }
-
-    solution_file << best_sol->steps << "\n";
-
+    solution_file << fixed << setprecision(8) << best_sol->tour_length << endl;
+    solution_file << best_sol->steps << endl;
     for(int i = 0; i < best_sol->steps; i++) {
-        solution_file << node_list[best_sol->tour[i]].x  << " " << node_list[best_sol->tour[i]].y << "\n";
+        solution_file << best_sol->tour[i] << ",";
     }
-    
+    solution_file << endl;
+
     solution_file.close();
 
 }

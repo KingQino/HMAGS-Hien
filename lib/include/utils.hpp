@@ -17,3 +17,5 @@ void end_run(int r);
 
 /*sets the termination conidition for your heuristic*/
 bool termination_condition(double rate);
+
+bool termination_condition_max_time(long duration);

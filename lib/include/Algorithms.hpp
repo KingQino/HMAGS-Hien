@@ -1,3 +1,6 @@
+#ifndef ALGORITHMS_HPP
+#define ALGORITHMS_HPP
+
 #include "Randoms.cpp"
 #include "individual.hpp"
 #include "Clock.h"
@@ -119,6 +122,7 @@ struct HMAGS {
     /* evolution */
     void Evolution();
 
+    double get_best_current_iteration(); //add by Yinghao
 } ;
 
 extern HMAGS hmags;
@@ -142,3 +146,4 @@ extern void free_SA();
 extern GreedySearch gs_optimizer;   
 extern void initialize_GS();
 extern void free_GS();
+#endif // ALGORITHMS_HPP

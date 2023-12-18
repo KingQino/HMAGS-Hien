@@ -28,3 +28,4 @@ build/*
 /CMakeFiles/
 /lib/CMakeFiles/
 /lib/CMakeFiles/
+/lib/cmake-build-debug/

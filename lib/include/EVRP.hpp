@@ -1,3 +1,6 @@
+#ifndef EVRP_HPP
+#define EVRP_HPP
+
 #include <vector>
 #include <limits.h>
 #include <string>
@@ -7,6 +10,10 @@
 
 const double INF = 2e15;
 #define TERMINATION 25000*ACTUAL_PROBLEM_SIZE  	//DO NOT CHANGE THE NUMBER
+
+using namespace std;
+
+extern int MAX_EXEC_TIME; // Another stop criteria - seconds
 
 extern double current_best;
 extern char* problem_instance;          //Name of the instance
@@ -73,3 +80,4 @@ void compute_nearest_points();
 
 
 
+#endif //EVRP_HPP

@@ -9,6 +9,7 @@
 #include<time.h>
 #include<limits.h>
 #include <sys/stat.h>
+#include "Algorithms.hpp"
 
 #include "EVRP.hpp"
 #include "stats.hpp"
@@ -146,5 +147,29 @@ void free_stats(){
   delete[] perf_of_trials;
 
 }
+
+ofstream log_evols;
+
+void open_stats_of_evolution(string output_dir, string algorithm, string task, int run) {
+//    ofstream evols_file;
+    output_dir = output_dir + '/' + algorithm;
+    // make directory if not exist
+    mkdir(output_dir.c_str(), 0777);
+    string evols_file_name = output_dir + "/evols." + task + ".csv";
+    log_evols.open(evols_file_name);
+    log_evols << "best" << "," << "evaluations" << "," << "progress" << "," << "duration" << endl;
+}
+
+
+void close_stats_of_evolution() {
+    log_evols.close();
+}
+
+void stats_evols(long duration, HMAGS& _hmags) {
+    double evals = get_evals();
+    double max_evals = TERMINATION;
+    log_evols << best_sol->tour_length << "," << evals << "," << evals/max_evals << "," << duration << endl;
+}
+
 
 

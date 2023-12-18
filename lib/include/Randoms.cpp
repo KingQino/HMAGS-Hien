@@ -1,3 +1,6 @@
+#ifndef RANDOMS_CPP
+#define RANDOMS_CPP
+
 #include <cstdlib>
 
 #include <cmath>
@@ -104,3 +107,4 @@ float gaussdev(long *idum)
 }
 
 };
+#endif // RANDOMS_CPP

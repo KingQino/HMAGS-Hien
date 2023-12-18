@@ -1,5 +1,6 @@
 #include<iostream>
 #include<string>
+#include <chrono>
 #include "utils.hpp"         
 
 using namespace std;
@@ -27,6 +28,10 @@ int main(int argc, char *argv[]) {
 
   for(run = 1; run <= MAX_TRIALS; run++){
     start_run(run);
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     if (algorithm == "SACO"){
       SACO  *ANTS = new SACO (1, 2, 80, 0.1, 2, 0);
       while(!termination_condition(1)){
@@ -41,11 +46,19 @@ int main(int argc, char *argv[]) {
       free_GS();
     } else if (algorithm == "HMAGS"){
       initialize_HMAGS();
-      while(!termination_condition(1)){
-        run_HMAGS(); 
+//      while(!termination_condition(1)){
+//        run_HMAGS();
+//      }
+      if(run == 1) open_stats_of_evolution(output_path, algorithm, problem_instance, run);
+      while (!termination_condition_max_time(duration)) {
+          run_HMAGS();
+          end_time = std::chrono::high_resolution_clock::now();
+          duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+          if (run == 1) stats_evols(duration, hmags);
       }
-      save_solution(output_path, algorithm, problem_instance, run); 
+      save_solution(output_path, algorithm, problem_instance, run);
       free_HMAGS();
+      if (run == 1) close_stats_of_evolution();
     } else if (algorithm == "SA"){
       initialize_SA();
       SA_optimizer.run(SA_optimizer.cur_sol);  

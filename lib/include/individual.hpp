@@ -1,3 +1,6 @@
+#ifndef INDIVIDUAL_HPP
+#define INDIVIDUAL_HPP
+
 #include <vector>
 #include <iostream>
 #include <string>
@@ -142,4 +145,6 @@ private:
     /* The penalty rate for invalid solution */
     double PENALTY = 1.3;
 };
+
+#endif //INDIVIDUAL_HPP
 

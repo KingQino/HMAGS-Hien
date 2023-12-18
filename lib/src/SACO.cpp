@@ -1,3 +1,6 @@
+#ifndef SACO_CPP
+#define SACO_CPP
+
 #include "Algorithms.hpp"
 
 #include <cstdio>
@@ -399,3 +402,4 @@ void SACO::free_SACO(){
     delete[] best_sol->tour;
     delete best_sol;
 }
+#endif // SACO_CPP
