@@ -166,6 +166,8 @@ double HMAGS::get_best_current_iteration() {
     } else {
         std::cerr << "The array is empty." << std::endl;
     }
+
+    return 0;
 }
 
 void initialize_HMAGS() {
