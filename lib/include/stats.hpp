@@ -1,4 +1,4 @@
-#define MAX_TRIALS 	2 									//DO NOT CHANGE THE NUMBER
+#define MAX_TRIALS 	1 									//DO NOT CHANGE THE NUMBER
 #define CHAR_LEN 100
 #include <string>
 using namespace std;

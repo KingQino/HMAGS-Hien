@@ -29,29 +29,29 @@ Executable of the source code
 
 /** Implementation Instructions **/ 
 
-Step 1: Access path `./lib` fisrt and run the commoands below.
+Step 1: make a diretory "build" first
 
 ```shell
-$ cmake .
-$ make
-$ cd .. # return the upper layer path
+$ mkdir build
 ```
 
 
 Step 2: Run this command in CMD (To create an executable file named "file_name"): 
-```
-$ cmake .
+```shell
+$ cd build
+$ cmake ..
 $ make
 ```
 
 Step 3: Run this command in CMD (To run the executable file):
-```
+
+```shell
 $ ./evrp <algorithm> <benchmark_file> <output_file>
 ```
 
 example:
-```
-$ ./evrp HMAGS benchmark/E-n23-k3.evrp output_files/
+```shell
+$ ./evrp HMAGS ../benchmark/E-n22-k4.evrp ../output_files/
 ```
 
 To make a solution in graph using python script:
