@@ -1,3 +1,16 @@
+> The main change made by me is on two aspects:
+>
+> - Fix compile error
+> - Add statistical function 
+
+## Usage:
+
+```shell
+./evrp HMAGS benchmark/E-n22-k4.evrp output_files/
+```
+
+
+
 # Electric Vehicle Routing Problem #
 
 *** Paper link [here](https://link.springer.com/article/10.1007/s10489-022-03555-8) ***
