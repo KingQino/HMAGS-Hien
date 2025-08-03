@@ -1,4 +1,7 @@
-#define MAX_TRIALS 	1 									//DO NOT CHANGE THE NUMBER
+#pragma once
+#include "Algorithms.hpp"
+
+#define MAX_TRIALS 	10 									//DO NOT CHANGE THE NUMBER
 #define CHAR_LEN 100
 #include <string>
 using namespace std;
@@ -12,4 +15,4 @@ void free_stats();										//free memory
 extern ofstream log_evols;
 extern void open_stats_of_evolution(string output_dir, string algorithm, string task, int run);
 extern void close_stats_of_evolution();
-extern void stats_evols(long duration,  HMAGS& _hmags);
+extern void stats_evols(std::chrono::duration<double> duration,  HMAGS& _hmags);

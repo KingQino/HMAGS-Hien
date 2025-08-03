@@ -26,14 +26,3 @@ bool termination_condition(double rate = 1.0) {
 
   return flag;
 }
-
-
-bool termination_condition_max_time(long duration) {
-    bool flag;
-    if(duration >= MAX_EXEC_TIME)
-        flag = true;
-    else
-        flag = false;
-
-    return flag;
-}

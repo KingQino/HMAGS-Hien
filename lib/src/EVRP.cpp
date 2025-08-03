@@ -9,10 +9,12 @@
 #include<time.h>
 #include<limits.h>
 #include <sys/stat.h>
+#include<filesystem>
 
 #include "EVRP.hpp"
 
 using namespace std;
+namespace fs = std::filesystem;
 
 char* problem_instance;          //Name of the instance
 struct node *node_list;     //List of nodes with id and x and y coordinates
@@ -36,9 +38,6 @@ double evals;
 double current_best;
 solution *best_sol;
 string algorithm;
-
-int MAX_EXEC_TIME; // unit seconds
-
 
 void compute_nearest_points() {
     for(int i = 1; i <= NUM_OF_CUSTOMERS; i++) {
@@ -224,14 +223,6 @@ void read_problem(char* filename){
         exit(1);
   } else {
     compute_distances();
-
-    if (NUM_OF_CUSTOMERS <= 100) {
-        MAX_EXEC_TIME = int (1 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
-    } else if (NUM_OF_CUSTOMERS <= 915) {
-        MAX_EXEC_TIME = int (2 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
-    } else {
-        MAX_EXEC_TIME = int (3 * (ACTUAL_PROBLEM_SIZE / 100.0) * 60 * 60);
-    }
   }
 
 }
@@ -458,14 +449,14 @@ void save_solution(string output_dir, string algorithm, string task, int run){
     output_dir = output_dir + '/' + to_string(run);
     // make directory if not exist
     mkdir(output_dir.c_str(), 0777);
-    string solution_file_name = output_dir + "/solution_" + algorithm + '_' +
-       task +".txt";
+
+    fs::path p(task);
+    string solution_file_name = output_dir + "/solution." + p.stem().string() +".txt";
     solution_file.open(solution_file_name);
 
     solution_file << fixed << setprecision(8) << best_sol->tour_length << endl;
-    solution_file << best_sol->steps << endl;
     for(int i = 0; i < best_sol->steps; i++) {
-        solution_file << best_sol->tour[i] << ",";
+      solution_file << best_sol->tour[i] << ",";
     }
     solution_file << endl;
 

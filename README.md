@@ -1,19 +1,8 @@
-> The main change made by me is on two aspects:
->
-> - Fix compile error
-> - Add statistical function 
-
-## Usage:
-
-```shell
-./evrp HMAGS benchmark/E-n22-k4.evrp output_files/
-```
-
-
-
 # Electric Vehicle Routing Problem #
 
 *** Paper link [here](https://link.springer.com/article/10.1007/s10489-022-03555-8) ***
+
+For the Python version, please see the repository at: [here](https://github.com/NeiH4207/EVRP-Python)
 
 ### This repository contains algorithms to solve the EVRP (Electric Vehicle Routing Problem) in C++ ###
 
@@ -42,29 +31,24 @@ Executable of the source code
 
 /** Implementation Instructions **/ 
 
-Step 1: make a diretory "build" first
-
-```shell
-$ mkdir build
-```
+Step 1: Access to the path which containing the source code files with command line(CMD). 
+Here are the commands necessary to run our c++ code in CMD.
 
 
 Step 2: Run this command in CMD (To create an executable file named "file_name"): 
-```shell
-$ cd build
-$ cmake ..
+```
+$ cmake .
 $ make
 ```
 
 Step 3: Run this command in CMD (To run the executable file):
-
-```shell
+```
 $ ./evrp <algorithm> <benchmark_file> <output_file>
 ```
 
 example:
-```shell
-$ ./evrp HMAGS ../benchmark/E-n22-k4.evrp ../output_files/
+```
+$ ./evrp HMAGS benchmark/E-n23-k3.evrp output_files/
 ```
 
 To make a solution in graph using python script:
@@ -103,3 +87,17 @@ The algorithm archived top 3 in competition [CEC-12 (2019)](https://mavrovouniot
 | X-n916-k207.evrp | 341649.91   | 343338.01 | 342460.70 | 510.66 | 342796.88  | 344521.64 | 343533.85 | 556.98 | 357391.57     | 362422.52 | 360269.94 | 1192.57 |
 | X-n1001-k43.evrp | 77476.36    | 78464.68  | 77920.52  | 234.73 | 78053.86   | 79226.81  | 78593.50  | 306.27 | 78832.90      | 79567.00  | 79163.34  | 229.19  |
 
+
+
+## Update 
+
+> The main changes made by me is on statistical function
+>
+
+- Usage
+  1. run command
+     ```sh
+     ./CEVRP-Hien HMAGS "\$CASE" stats # GA - max evals
+     ```
+
+     

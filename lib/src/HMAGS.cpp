@@ -1,9 +1,4 @@
-#ifndef HMAGS_CPP
-#define HMAGS_CPP
-
 #include "Algorithms.hpp"
-#include <algorithm>
-
 
 using namespace std;
 
@@ -150,26 +145,6 @@ void HMAGS::Evolution() {
     Selection();
 }
 
-//add by Yinghao
-double HMAGS::get_best_current_iteration() {
-    auto comparator = [](Individual ind1, Individual ind2) {
-        return ind1.get_fitness() < ind2.get_fitness();
-    };
-
-    auto minElement = std::min_element(std::begin(pop), std::end(pop), comparator);
-
-    if (minElement != std::end(pop)) {
-        // The minimum element is pointed to by minElement
-        // You can access it using *minElement
-        Individual minIndividual = *minElement;
-        return minIndividual.get_fitness();
-    } else {
-        std::cerr << "The array is empty." << std::endl;
-    }
-
-    return 0;
-}
-
 void initialize_HMAGS() {
     best_sol = new solution;
     best_sol->tour = new int[MAX_NODE];
@@ -189,5 +164,3 @@ void free_HMAGS(){
 void run_HMAGS() {
     hmags.Evolution();
 }
-
-#endif // HMAGS_CPP

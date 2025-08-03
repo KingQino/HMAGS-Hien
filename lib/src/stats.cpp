@@ -9,7 +9,6 @@
 #include<time.h>
 #include<limits.h>
 #include <sys/stat.h>
-#include "Algorithms.hpp"
 
 #include "EVRP.hpp"
 #include "stats.hpp"
@@ -25,31 +24,28 @@ char *perf_filename;
 double* perf_of_trials;
 
 void open_stats(string algorithm, string outpath){
-    //Initialize
-    perf_of_trials = new double[MAX_TRIALS];
-
-    for(int i = 0; i < MAX_TRIALS; i++){
-        perf_of_trials[i] = 0.0;
-    }
-
-  //initialize and open output files
-  perf_filename = new char[CHAR_LEN];
-  for (int i = 0; i < (int) strlen(problem_instance); i++){
-    char c = problem_instance[i];
-    if(c == '/'){
-      problem_instance= &problem_instance[i + 1];
-    }
+  // Initialize trial performance array
+  perf_of_trials = new double[MAX_TRIALS];
+  for (int i = 0; i < MAX_TRIALS; i++) {
+    perf_of_trials[i] = 0.0;
   }
-  // makedir ouput path if not exist
-  mkdir(outpath.c_str(), 0777);
-  sprintf(perf_filename, "%s/stats.%s_%s.txt", outpath.c_str(), algorithm.c_str(), problem_instance);
-  //for performance
-  if ((log_performance = fopen(perf_filename,"w")) == NULL) {
-    cout << "Error read file " << perf_filename << endl;
-    exit(2); 
-  }
-  //initialize and open output files
 
+  // Get the task name from problem_instance
+  const fs::path problem_path(problem_instance);
+  string problem_name = problem_path.stem().string();  // safely get "E-n22-k4"
+
+  // Ensure output directory exists
+  fs::create_directories(outpath);
+
+  // Build output filename
+  const string perf_path_str = outpath + "/stats." + problem_name + ".txt";
+
+  // Open output file (safe version)
+  log_performance = fopen(perf_path_str.c_str(), "w");
+  if (log_performance == nullptr) {
+    cerr << "Error: cannot open file for writing: " << perf_path_str << endl;
+    exit(2);
+  }
 }
 
 
@@ -126,12 +122,12 @@ void close_stats(void){
 
   perf_mean_value = mean(perf_of_trials,MAX_TRIALS);
   perf_stdev_value = stdev(perf_of_trials,MAX_TRIALS,perf_mean_value);
-  fprintf(log_performance,"Mean %f\t ",perf_mean_value);
-  fprintf(log_performance,"\tStd Dev %f\t ",perf_stdev_value);
+  fprintf(log_performance,"Mean %.2f\t ",perf_mean_value);
+  fprintf(log_performance,"\tStd Dev %.2f\t ",perf_stdev_value);
   fprintf(log_performance,"\n");
-  fprintf(log_performance, "Min: %f\t ", best_of_vector(perf_of_trials,MAX_TRIALS));
+  fprintf(log_performance, "Min: %.2f\t ", best_of_vector(perf_of_trials,MAX_TRIALS));
   fprintf(log_performance,"\n");
-  fprintf(log_performance, "Max: %f\t ", worst_of_vector(perf_of_trials,MAX_TRIALS));
+  fprintf(log_performance, "Max: %.2f\t ", worst_of_vector(perf_of_trials,MAX_TRIALS));
   fprintf(log_performance,"\n");
 
 
@@ -151,25 +147,26 @@ void free_stats(){
 ofstream log_evols;
 
 void open_stats_of_evolution(string output_dir, string algorithm, string task, int run) {
-//    ofstream evols_file;
-    output_dir = output_dir + '/' + algorithm;
-    // make directory if not exist
-    mkdir(output_dir.c_str(), 0777);
-    string evols_file_name = output_dir + "/evols." + task + ".csv";
-    log_evols.open(evols_file_name);
-    log_evols << "best" << "," << "evaluations" << "," << "progress" << "," << "duration" << endl;
+  output_dir = output_dir + '/' + to_string(run);
+  mkdir(output_dir.c_str(), 0777);
+  const fs::path p(task);
+  string evols_file_name = output_dir + "/evols." + p.stem().string() + ".csv";
+  log_evols.open(evols_file_name);
+  log_evols << "obj" << "," << "evals" << "," << "time" << endl;
+  log_evols << std::fixed << std::setprecision(2);
 }
 
 
 void close_stats_of_evolution() {
-    log_evols.close();
+  log_evols.close();
 }
 
-void stats_evols(long duration, HMAGS& _hmags) {
-    double evals = get_evals();
-    double max_evals = TERMINATION;
-    log_evols << best_sol->tour_length << "," << evals << "," << evals/max_evals << "," << duration << endl;
+void stats_evols(const std::chrono::duration<double> duration, HMAGS& _hmags) {
+  double evals = get_evals();
+
+  log_evols << best_sol->tour_length << "," << evals << "," << duration.count() << endl;
 }
+
 
 
 
