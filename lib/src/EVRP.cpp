@@ -6,10 +6,12 @@
 #include<math.h>
 #include<algorithm>
 #include<fstream>
+#include<sstream>
 #include<time.h>
 #include<limits.h>
 #include <sys/stat.h>
 #include<filesystem>
+#include<vector>
 
 #include "EVRP.hpp"
 
@@ -38,6 +40,47 @@ double evals;
 double current_best;
 solution *best_sol;
 string algorithm;
+
+namespace {
+
+string trim(const string& value) {
+  const size_t start = value.find_first_not_of(" \t\r\n");
+  if (start == string::npos) {
+    return "";
+  }
+
+  const size_t end = value.find_last_not_of(" \t\r\n");
+  return value.substr(start, end - start + 1);
+}
+
+string first_token(const string& line) {
+  istringstream iss(line);
+  string token;
+  iss >> token;
+  if (!token.empty() && token.back() == ':') {
+    token.pop_back();
+  }
+  return token;
+}
+
+bool is_section_marker(const string& token) {
+  return token == "NODE_COORD_SECTION" ||
+         token == "DEMAND_SECTION" ||
+         token == "STATIONS_COORD_SECTION" ||
+         token == "DEPOT_SECTION" ||
+         token == "EOF";
+}
+
+string value_after_colon(const string& line) {
+  const size_t colon = line.find(':');
+  if (colon == string::npos) {
+    return "";
+  }
+
+  return trim(line.substr(colon + 1));
+}
+
+}  // namespace
 
 void compute_nearest_points() {
     for(int i = 1; i <= NUM_OF_CUSTOMERS; i++) {
@@ -103,128 +146,243 @@ double ** generate_2D_matrix_double(int n, int m){
 /* vector.                                                      */
 /****************************************************************/
 void read_problem(char* filename){
-    int i;
-  char line[CHAR_LEN];
-  char * keywords;
-  char Delimiters[] = " :=\n\t\r\f\v";
   ifstream fin(filename);
-  while((fin.getline(line, CHAR_LEN-1))){
+  if (!fin.is_open()) {
+    cout << "wrong problem instance file" << endl;
+    exit(1);
+  }
 
-    if(!(keywords = strtok(line, Delimiters)))
+  vector<node> parsed_nodes;
+  vector<pair<int, int> > demand_entries;
+  vector<int> station_entries;
+  string line;
+  string buffered_line;
+  bool has_buffered_line = false;
+
+  ACTUAL_PROBLEM_SIZE = 0;
+  NUM_OF_CUSTOMERS = 0;
+  DEPOT = -1;
+
+  auto next_line = [&](string& out_line) -> bool {
+    if (has_buffered_line) {
+      out_line = buffered_line;
+      has_buffered_line = false;
+      buffered_line.clear();
+      return true;
+    }
+
+    return static_cast<bool>(getline(fin, out_line));
+  };
+
+  while (next_line(line)) {
+    const string token = first_token(line);
+    if (token.empty()) {
       continue;
-    if(!strcmp(keywords, "DIMENSION")){
-      if(!sscanf(strtok(NULL, Delimiters), "%d", &problem_size)){
-	cout<<"DIMENSION error"<<endl;
-	exit(0);
-      }
     }
-    else if(!strcmp(keywords, "EDGE_WEIGHT_TYPE")){
-      char * tempChar;
-      if(!(tempChar=strtok(NULL, Delimiters))){
-	cout<<"EDGE_WEIGHT_TYPE error"<<endl;
-	exit(0);
-      }
-      if(strcmp(tempChar, "EUC_2D")){
-	cout<<"not EUC_2D"<<endl;
-	exit(0);
-      }
-    }
-    else if (!strcmp(keywords, "CAPACITY")){
-       if(!sscanf(strtok(NULL,Delimiters), "%d", &MAX_CAPACITY)){
-          cout << "CAPACITY error" << endl;
-          exit(0);
-       }
-    }
-    else if (!strcmp(keywords, "VEHICLES")){
-       if(!sscanf(strtok(NULL,Delimiters), "%d", &MIN_VEHICLES)){
-          cout << "VEHICLES error" << endl;
-          exit(0);
-       }
-    }
-    else if (!strcmp(keywords, "ENERGY_CAPACITY")){
-       if(!sscanf(strtok(NULL,Delimiters), "%d", &BATTERY_CAPACITY)){
-          cout << "ENERGY_CAPACITY error" << endl;
-          exit(0);
-       }
-    }
-    else if (!strcmp(keywords, "ENERGY_CONSUMPTION")){
-       if(!sscanf(strtok(NULL,Delimiters), "%lf", &energy_consumption)){
-          cout << "ENERGY_CONSUMPTION error" << endl;
-          exit(0);
-       }
-    }
-    else if (!strcmp(keywords, "STATIONS")){
-       if(!sscanf(strtok(NULL,Delimiters), "%d", &NUM_OF_STATIONS)){
-          cout << "STATIONS error" << endl;
-          exit(0);
-       }
-    }
-    else if (!strcmp(keywords, "OPTIMAL_VALUE")){
-       if(!sscanf(strtok(NULL,Delimiters), "%lf", &OPTIMUM)){
-          cout << "OPTIMAL_VALUE error" << endl;
-          exit(0);
-       }
-    }
-    else if(!strcmp(keywords, "NODE_COORD_SECTION")){
-      if(problem_size!=0){
-         /*prroblem_size is the number of customers plus the depot*/
-          NUM_OF_CUSTOMERS = problem_size - 1;
-          ACTUAL_PROBLEM_SIZE = problem_size + NUM_OF_STATIONS;
 
-          node_list = new node[ACTUAL_PROBLEM_SIZE];
-
-        for(i=0; i < ACTUAL_PROBLEM_SIZE; i++){
-	         //store initial objects
-           fin>>node_list[i].id;
-	         fin>>node_list[i].x>>node_list[i].y;
-           node_list[i].id -=1;
+    if (token == "DIMENSION") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> problem_size)) {
+        cout << "DIMENSION error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "EDGE_WEIGHT_TYPE" || token == "EDGE_WEIGHT_FORMAT") {
+      const string weight_type = value_after_colon(line);
+      if (weight_type.empty()) {
+        cout << "EDGE_WEIGHT_TYPE error" << endl;
+        exit(0);
+      }
+      if (weight_type != "EUC_2D") {
+        cout << "not EUC_2D" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "CAPACITY") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> MAX_CAPACITY)) {
+        cout << "CAPACITY error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "VEHICLES") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> MIN_VEHICLES)) {
+        cout << "VEHICLES error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "ENERGY_CAPACITY") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> BATTERY_CAPACITY)) {
+        cout << "ENERGY_CAPACITY error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "ENERGY_CONSUMPTION") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> energy_consumption)) {
+        cout << "ENERGY_CONSUMPTION error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "STATIONS") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> NUM_OF_STATIONS)) {
+        cout << "STATIONS error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "OPTIMAL_VALUE") {
+      istringstream iss(value_after_colon(line));
+      if (!(iss >> OPTIMUM)) {
+        cout << "OPTIMAL_VALUE error" << endl;
+        exit(0);
+      }
+    }
+    else if (token == "NODE_COORD_SECTION") {
+      while (getline(fin, line)) {
+        const string section_token = first_token(line);
+        if (section_token.empty()) {
+          continue;
         }
-        //compute the distances using initial objects
-        distances = generate_2D_matrix_double(ACTUAL_PROBLEM_SIZE, ACTUAL_PROBLEM_SIZE);
-     } else {
-           cout << "wrong problem instance file" << endl;
-           exit(1);
-     }
-    }
-    else if(!strcmp(keywords, "DEMAND_SECTION")){
-     if(problem_size!=0){
-
-       int temp;
-       //masked_demand = new int[problem_size];
-       cust_demand = new int[ACTUAL_PROBLEM_SIZE];
-       charging_station = new bool[ACTUAL_PROBLEM_SIZE];
-       for(i = 0; i < problem_size; i++){
-        fin >> temp;
-        fin >> cust_demand[temp-1];
-       }
-
-       //initialize the charging stations.
-       //the depot is set to a charging station in the DEPOT_SECTION
-       for(i = 0; i < ACTUAL_PROBLEM_SIZE; i++){
-          if(i < problem_size) {
-            charging_station[i] = false;
-          } else {
-            charging_station[i] = true;
-            cust_demand[i] = 0;
-          }
+        if (is_section_marker(section_token)) {
+          buffered_line = line;
+          has_buffered_line = true;
+          break;
         }
+
+        istringstream iss(line);
+        node parsed_node;
+        if (!(iss >> parsed_node.id >> parsed_node.x >> parsed_node.y)) {
+          cout << "wrong problem instance file" << endl;
+          exit(1);
+        }
+        parsed_node.id -= 1;
+        parsed_nodes.push_back(parsed_node);
       }
     }
-     else if(!strcmp(keywords, "DEPOT_SECTION")){
-      fin >> DEPOT;
-      DEPOT-=1;
-      charging_station[DEPOT] = true;
-    }
+    else if (token == "DEMAND_SECTION") {
+      while (getline(fin, line)) {
+        const string section_token = first_token(line);
+        if (section_token.empty()) {
+          continue;
+        }
+        if (is_section_marker(section_token)) {
+          buffered_line = line;
+          has_buffered_line = true;
+          break;
+        }
 
+        istringstream iss(line);
+        int node_id;
+        int demand;
+        if (!(iss >> node_id >> demand)) {
+          cout << "wrong problem instance file" << endl;
+          exit(1);
+        }
+        demand_entries.push_back(make_pair(node_id, demand));
+      }
+    }
+    else if (token == "STATIONS_COORD_SECTION") {
+      while (getline(fin, line)) {
+        const string section_token = first_token(line);
+        if (section_token.empty()) {
+          continue;
+        }
+        if (is_section_marker(section_token)) {
+          buffered_line = line;
+          has_buffered_line = true;
+          break;
+        }
+
+        istringstream iss(line);
+        int node_id;
+        if (!(iss >> node_id)) {
+          cout << "wrong problem instance file" << endl;
+          exit(1);
+        }
+        station_entries.push_back(node_id);
+      }
+    }
+    else if (token == "DEPOT_SECTION") {
+      while (getline(fin, line)) {
+        const string section_token = first_token(line);
+        if (section_token.empty()) {
+          continue;
+        }
+        if (section_token == "EOF") {
+          break;
+        }
+
+        istringstream iss(line);
+        int depot_id;
+        if (!(iss >> depot_id)) {
+          cout << "wrong problem instance file" << endl;
+          exit(1);
+        }
+        if (depot_id == -1) {
+          break;
+        }
+        DEPOT = depot_id - 1;
+      }
+    }
   }
+
   fin.close();
-  if(ACTUAL_PROBLEM_SIZE == 0) {
-        cout << "wrong problem instance file" << endl;
-        exit(1);
-  } else {
-    compute_distances();
+
+  if (parsed_nodes.empty() || demand_entries.empty()) {
+    cout << "wrong problem instance file" << endl;
+    exit(1);
   }
 
+  ACTUAL_PROBLEM_SIZE = static_cast<int>(parsed_nodes.size());
+  problem_size = static_cast<int>(demand_entries.size());
+  NUM_OF_CUSTOMERS = problem_size - 1;
+
+  if (!station_entries.empty()) {
+    NUM_OF_STATIONS = static_cast<int>(station_entries.size());
+  }
+
+  if (ACTUAL_PROBLEM_SIZE != problem_size + NUM_OF_STATIONS || DEPOT < 0 || DEPOT >= ACTUAL_PROBLEM_SIZE) {
+    cout << "wrong problem instance file" << endl;
+    exit(1);
+  }
+
+  node_list = new node[ACTUAL_PROBLEM_SIZE];
+  for (int i = 0; i < ACTUAL_PROBLEM_SIZE; i++) {
+    node_list[i] = parsed_nodes[i];
+  }
+
+  cust_demand = new int[ACTUAL_PROBLEM_SIZE];
+  charging_station = new bool[ACTUAL_PROBLEM_SIZE];
+  for (int i = 0; i < ACTUAL_PROBLEM_SIZE; i++) {
+    cust_demand[i] = 0;
+    charging_station[i] = false;
+  }
+
+  for (size_t i = 0; i < demand_entries.size(); i++) {
+    const int node_id = demand_entries[i].first - 1;
+    if (node_id < 0 || node_id >= ACTUAL_PROBLEM_SIZE) {
+      cout << "wrong problem instance file" << endl;
+      exit(1);
+    }
+    cust_demand[node_id] = demand_entries[i].second;
+  }
+
+  for (size_t i = 0; i < station_entries.size(); i++) {
+    const int node_id = station_entries[i] - 1;
+    if (node_id < 0 || node_id >= ACTUAL_PROBLEM_SIZE) {
+      cout << "wrong problem instance file" << endl;
+      exit(1);
+    }
+    charging_station[node_id] = true;
+  }
+
+  charging_station[DEPOT] = true;
+
+  distances = generate_2D_matrix_double(ACTUAL_PROBLEM_SIZE, ACTUAL_PROBLEM_SIZE);
+  compute_distances();
 }
 
 
