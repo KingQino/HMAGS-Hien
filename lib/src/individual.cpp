@@ -67,18 +67,18 @@ void Individual::rand_generate(){
     set_tour_index();
 }
 
-void Individual::copy_order(Individual other){
-    for (int i = 0; i < NUM_OF_CUSTOMERS; i++){
+void Individual::copy_order(const Individual& other){
+    for (int i = 0; i < MAX_NODE; i++){
         order[i] = other.order[i];
         tour_index[i] = other.tour_index[i];
+        index_of_customer[i] = other.index_of_customer[i];
+        solution[i] = other.solution[i];
+        tours[i] = other.tours[i];
     }
     this->num_of_tours = other.get_num_of_tours();
-    for (int i = 0; i < this->num_of_tours; i++){
-        tours[i].left = other.tours[i].left;
-        tours[i].right = other.tours[i].right;
-    }
+    this->steps = other.steps;
     this->fitness = other.get_fitness();
-
+    this->TYPE = other.TYPE;
 }
 
 // generate a new order
@@ -192,6 +192,9 @@ void Individual::show(){
 }
 
 void Individual::set_tour_index() {
+    for (int i = 0; i < MAX_NODE; i++) {
+        tour_index[i] = -1;
+    }
     // for (int i = 0; i < NUM_OF_CUSTOMERS; i++){
     //     cout << order[i] << " ";
     // } cout << "\n";
@@ -219,13 +222,10 @@ void Individual::local_search(){
             stop = true;
             for(i = l; i <= r; ++i) {
                 for(j = r; j > i; --j) {
-                    u0 = order[i], u1 = order[i - 1];
-                    v0 = order[j], v1 = order[j + 1];
-
-                    if(i - 1 < l)
-                        u1 = 0;
-                    if(j + 1 > r)
-                        v1 = 0;
+                    u0 = order[i];
+                    u1 = (i - 1 < l) ? 0 : order[i - 1];
+                    v0 = order[j];
+                    v1 = (j + 1 > r) ? 0 : order[j + 1];
 
                     t1 = get_distance(u1, u0)+ get_distance(v0, v1);
                     t2 = get_distance(u1, v0) + get_distance(u0, v1);

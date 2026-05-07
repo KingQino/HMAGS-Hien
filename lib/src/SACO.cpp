@@ -93,13 +93,10 @@ void local_search(int * order, int size){
         stop = true;
         for(i = l; i <= r; ++i) {
             for(j = r; j > i; --j) {
-                u0 = order[i], u1 = order[i - 1];
-                v0 = order[j], v1 = order[j + 1];
-
-                if(i - 1 < l)
-                    u1 = 0;
-                if(j + 1 > r)
-                    v1 = 0;
+                u0 = order[i];
+                u1 = (i - 1 < l) ? 0 : order[i - 1];
+                v0 = order[j];
+                v1 = (j + 1 > r) ? 0 : order[j + 1];
 
                 t1 = get_distance(u1, u0)+ get_distance(v0, v1);
                 t2 = get_distance(u1, v0) + get_distance(u0, v1);

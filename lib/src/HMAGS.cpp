@@ -1,4 +1,5 @@
 #include "Algorithms.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -68,47 +69,56 @@ void HMAGS::Repopulation() {
     }
 }
 
-void HMAGS::distribute_crossover(Individual parent_1, Individual parent_2, int idx) {
+void HMAGS::distribute_crossover(const Individual& parent_1, const Individual& parent_2, int idx) {
 
     int num = rand()%(NUM_OF_CUSTOMERS) + 1;// so ngau nhien tu 1 den size of customers
     int id1 = parent_1.tour_index[num];// customer 'num' of id1 tour in parent_1
     int id2 = parent_2.tour_index[num];// customer 'num' of id2 tour in parent_2
-    int have[NUM_OF_CUSTOMERS + 1];
-    int alens[NUM_OF_CUSTOMERS + 1];
+    vector<int> have(NUM_OF_CUSTOMERS + 1, 0);
+    vector<int> alens;
+    alens.reserve(NUM_OF_CUSTOMERS);
 
     Individual child1;
     Individual child2;
     child1.copy_order(parent_1);
     child2.copy_order(parent_2);
 
-    for(int i = 0; i <= NUM_OF_CUSTOMERS; i++){
-        have[i] = 0;// have : exists in the alens or not
-        alens[i] = 0;
+    if (id1 < 0 || id1 >= parent_1.get_num_of_tours() || id2 < 0 || id2 >= parent_2.get_num_of_tours()) {
+        pop[idx].copy_order(child1);
+        pop[idx + 1].copy_order(child2);
+        pop[idx].setup();
+        pop[idx + 1].setup();
+        return;
     }
 
-    int index = 0;
+    auto append_customer = [&](int customer) {
+        if (customer < 1 || customer > NUM_OF_CUSTOMERS) {
+            return;
+        }
+        if (!have[customer]) {
+            have[customer] = 1;
+            alens.push_back(customer);
+        }
+    };
 
     // merge tour_id1, tour_id2 into alens
     for(int i = parent_1.tours[id1].right; i >= parent_1.tours[id1].left; i--) {
-        alens[index++] = parent_1.order[i];
-        have[parent_1.order[i]] = 1;
+        append_customer(parent_1.order[i]);
     }
 
     for(int i = parent_2.tours[id2].right; i >= parent_2.tours[id2].left; i--) {
-        if(!have[parent_2.order[i]]) {
-            alens[index++] = parent_2.order[i];
-            have[parent_2.order[i]] = 1;
-        }
+        append_customer(parent_2.order[i]);
     }
+    int index = static_cast<int>(alens.size());
     int index2 = 0; // size of alens
 
     // Distribute alens to both of child1 and child2
 
     for(int i = 0; i < NUM_OF_CUSTOMERS; i++){
-        if(have[child1.order[i]]){
+        if(child1.order[i] >= 1 && child1.order[i] <= NUM_OF_CUSTOMERS && have[child1.order[i]] && index > 0){
             child1.order[i] = alens[--index];
         }
-        if(have[child2.order[i]]){
+        if(child2.order[i] >= 1 && child2.order[i] <= NUM_OF_CUSTOMERS && have[child2.order[i]] && index2 < static_cast<int>(alens.size())){
             child2.order[i] = alens[index2++];
         }
     }

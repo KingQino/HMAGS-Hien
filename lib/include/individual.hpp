@@ -40,7 +40,7 @@ public:
     /* generate optimal initial indv*/
     void opt_generate();
     /* copy a other: order, tours and fitness*/
-    void copy_order(Individual);
+    void copy_order(const Individual& other);
     /* Checking valid order of individual*/
     bool is_valid_order();
     
@@ -95,7 +95,7 @@ public:
     void show();
 
     /* return fitness */
-    double get_fitness(){
+    double get_fitness() const {
         return this->fitness;
     }
     /* return fitness */
@@ -109,7 +109,7 @@ public:
     }
 
     /* return the number of steps in all tours */
-    int get_steps(){
+    int get_steps() const {
         return this->steps;
     }
 
@@ -119,7 +119,7 @@ public:
     }
 
     /* return the number of tours */
-    int get_num_of_tours(){
+    int get_num_of_tours() const {
         return this->num_of_tours;
     }
 
@@ -142,4 +142,3 @@ private:
     /* The penalty rate for invalid solution */
     double PENALTY = 1.3;
 };
-

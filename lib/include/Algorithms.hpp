@@ -110,8 +110,8 @@ struct HMAGS {
     void Repopulation();
 
     /* crossover function, return two new indvs */
-    void distribute_crossover(Individual parent_1, 
-                              Individual parent_2, 
+    void distribute_crossover(const Individual& parent_1, 
+                              const Individual& parent_2, 
                               int idx);
   
     /* weheel selection method, using by ranking */
